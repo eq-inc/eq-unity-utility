@@ -30,7 +30,7 @@ ExportedObj/
 sysinfo.txt
 
 # Builds
-*.unitypackage
+#*.unitypackage
 Assets/TangoSDK/
 Assets/TangoPrefabs/
 Assets/Plugins/
