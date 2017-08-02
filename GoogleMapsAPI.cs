@@ -118,7 +118,6 @@ namespace Eq.Unity
             byte[] ret = null;
 
             request.downloadHandler = new DownloadHandlerBuffer();
-            //mRoutine.StartCoroutine(RunWebRequest(request));
             request.Send();
             while (!request.isDone)
             {
@@ -132,25 +131,6 @@ namespace Eq.Unity
 
             Logger.CategoryLog(LogController.LogCategoryMethodOut);
             return ret;
-        }
-
-        internal IEnumerator RunWebRequest(UnityWebRequest request, Action<UnityWebRequest> resultHandler)
-        {
-            Logger.CategoryLog(LogController.LogCategoryMethodIn);
-            yield return request.Send();
-
-            while (!request.isDone)
-            {
-                yield return null;
-            }
-
-            if (resultHandler != null)
-            {
-                resultHandler(request);
-            }
-            Logger.CategoryLog(LogController.LogCategoryMethodOut);
-
-            yield break;
         }
 
         abstract public class UrlParameter
