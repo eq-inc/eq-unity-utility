@@ -10,7 +10,7 @@ namespace Eq.Unity
     class GoogleMapsAPITests
     {
         [Test]
-        public void TestUrlParameterGetContent()
+        public void TestGetContent()
         {
             UnityWebRequest request = new UnityWebRequest();
             request.url = "https://www.google.co.jp";
@@ -20,6 +20,43 @@ namespace Eq.Unity
             byte[] response = (byte[])api.GetType().InvokeMember("GetContent", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod, null, api, new object[] { request });
 
             Assert.That(response != null && response.Length > 0);
+        }
+
+        [Test]
+        public void TestGetDirections()
+        {
+            GoogleMapsAPI api = new GoogleMapsAPI("AIzaSyAeq_EQ5JduZmb91vy-UI0qhLJE4_zdF_4");
+            ResponseDirections response = null;
+            response = api.GetDirections(
+                GoogleMapsAPI.TransferMode.Bicycling,
+                new GoogleMapsAPI.UrlParameterOrigin(35.667321f, 139.729162f),
+                new GoogleMapsAPI.UrlParameterDestination(35.665485f, 139.770763f)
+            );
+            Assert.That(response != null && response.GetStatus() == DirectionStatus.ZERO_RESULTS);
+
+            api = new GoogleMapsAPI("AIzaSyAeq_EQ5JduZmb91vy-UI0qhLJE4_zdF_4");
+            response = api.GetDirections(
+                GoogleMapsAPI.TransferMode.Driving,
+                new GoogleMapsAPI.UrlParameterOrigin(35.667321f, 139.729162f),
+                new GoogleMapsAPI.UrlParameterDestination(35.665485f, 139.770763f)
+            );
+            Assert.That(response != null && response.GetStatus() == DirectionStatus.OK);
+
+            api = new GoogleMapsAPI("AIzaSyAeq_EQ5JduZmb91vy-UI0qhLJE4_zdF_4");
+            response = api.GetDirections(
+                GoogleMapsAPI.TransferMode.Transit,
+                new GoogleMapsAPI.UrlParameterOrigin(35.667321f, 139.729162f),
+                new GoogleMapsAPI.UrlParameterDestination(35.665485f, 139.770763f)
+            );
+            Assert.That(response != null && response.GetStatus() == DirectionStatus.OK);
+
+            api = new GoogleMapsAPI("AIzaSyAeq_EQ5JduZmb91vy-UI0qhLJE4_zdF_4");
+            response = api.GetDirections(
+                GoogleMapsAPI.TransferMode.Walking,
+                new GoogleMapsAPI.UrlParameterOrigin(35.667321f, 139.729162f),
+                new GoogleMapsAPI.UrlParameterDestination(35.665485f, 139.770763f)
+           );
+            Assert.That(response != null && response.GetStatus() == DirectionStatus.OK);
         }
 
         [Test]

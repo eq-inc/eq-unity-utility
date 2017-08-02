@@ -68,19 +68,17 @@ namespace Eq.Unity
 
             // modeパラメータ
             UrlParameterMode modeParameter = new UrlParameterMode(transferMode);
-            urlBuilder.Append(modeParameter.GetName()).Append("=").Append(modeParameter.GetValue());
+            urlBuilder.Append(modeParameter.GetName()).Append("=").Append(modeParameter.GetValue()).Append("&");
 
             // originパラメータ
-            urlBuilder.Append(orgParameter.GetName()).Append("=").Append(orgParameter.GetValue());
+            urlBuilder.Append(orgParameter.GetName()).Append("=").Append(orgParameter.GetValue()).Append("&");
 
             // destinationパラメータ
-            urlBuilder.Append(destParameter.GetName()).Append("=").Append(destParameter.GetValue());
+            urlBuilder.Append(destParameter.GetName()).Append("=").Append(destParameter.GetValue()).Append("&");
 
             // languageパラメータ
             UrlParameterLanguage languageParameter = new UrlParameterLanguage();
-            urlBuilder.Append(languageParameter.GetName()).Append("=").Append(languageParameter.GetValue());
-
-            Logger.CategoryLog(LogController.LogCategoryMethodTrace, "url(without api key parameter) = " + urlBuilder.ToString());
+            urlBuilder.Append(languageParameter.GetName()).Append("=").Append(languageParameter.GetValue()).Append("&");
 
             // API key
             UrlParameterAPIKey apiKeyParameter = new UrlParameterAPIKey(mAPIKey);
@@ -120,7 +118,13 @@ namespace Eq.Unity
             byte[] ret = null;
 
             request.downloadHandler = new DownloadHandlerBuffer();
-            mRoutine.StartCoroutine(RunWebRequest(request));
+            //mRoutine.StartCoroutine(RunWebRequest(request));
+            request.Send();
+            while (!request.isDone)
+            {
+                System.Threading.Thread.Sleep(1);
+            }
+
             if (request.responseCode == 200)
             {
                 ret = request.downloadHandler.data;
@@ -130,7 +134,7 @@ namespace Eq.Unity
             return ret;
         }
 
-        internal IEnumerator RunWebRequest(UnityWebRequest request)
+        internal IEnumerator RunWebRequest(UnityWebRequest request, Action<UnityWebRequest> resultHandler)
         {
             Logger.CategoryLog(LogController.LogCategoryMethodIn);
             yield return request.Send();
@@ -139,7 +143,14 @@ namespace Eq.Unity
             {
                 yield return null;
             }
+
+            if (resultHandler != null)
+            {
+                resultHandler(request);
+            }
             Logger.CategoryLog(LogController.LogCategoryMethodOut);
+
+            yield break;
         }
 
         abstract public class UrlParameter
@@ -371,11 +382,36 @@ namespace Eq.Unity
         }
     }
 
+    public enum DirectionStatus
+    {
+        INIT, OK, NOT_FOUND, ZERO_RESULTS, MAX_WAYPOINTS_EXCEEDED, INVALID_REQUEST, OVER_QUERY_LIMIT, REQUEST_DENIED, UNKNOWN_ERROR
+    }
+
     public class ResponseDirections
     {
         public string status;
         public GeocodedWaypoint[] geocoded_waypoints;
         public Route[] routes;
+        private DirectionStatus mStatusEnum = DirectionStatus.INIT;
+
+        public DirectionStatus GetStatus()
+        {
+            DirectionStatus ret = mStatusEnum;
+
+            if (ret == DirectionStatus.INIT)
+            {
+                try
+                {
+                    ret = mStatusEnum = (DirectionStatus)Enum.Parse(ret.GetType(), status);
+                }
+                catch (Exception e)
+                {
+                    GoogleMapsAPI.Logger.CategoryLog(LogController.LogCategoryMethodError, e);
+                }
+            }
+
+            return ret;
+        }
     }
 
     public class GeocodedWaypoint
