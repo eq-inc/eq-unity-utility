@@ -212,7 +212,7 @@ namespace Eq.Unity
         internal override void OnCancelled()
         {
             ICancelCallback callback = mCallback as ICancelCallback;
-            if(callback != null)
+            if (callback != null)
             {
                 callback.OnCancelled();
             }
@@ -279,6 +279,102 @@ namespace Eq.Unity
 
         public interface IFullCallback : ICallback, IResultCallback, ICancelCallback
         {
+        }
+    }
+
+    public class DelegateAsncTask<Param, Progress, Result> : AsyncTask<Param, Progress, Result>
+    {
+        public delegate void OnPreExecuteDelegate();
+        public delegate Result DoInBackgroundDelegate(params Param[] parameters);
+        public delegate void OnProgressUpdateDelegate(params Progress[] values);
+        public delegate void OnPostExecuteDelegate(Result result, params Param[] parameters);
+        public delegate void OnCancelledDelegate();
+        public delegate void OnCancelledAfterFinishedDelegate(Result result, params Param[] parameters);
+
+        private OnPreExecuteDelegate mOnPreExecute;
+        private DoInBackgroundDelegate mDoInBackground;
+        private OnProgressUpdateDelegate mOnProgressUpdate;
+        private OnPostExecuteDelegate mOnPostExecute;
+        private OnCancelledDelegate mOnCancelled;
+        private OnCancelledAfterFinishedDelegate mOnCancelledAfterFinished;
+
+        public DelegateAsncTask(DoInBackgroundDelegate doInBackground)
+        {
+            if (doInBackground == null)
+            {
+                throw new ArgumentNullException();
+            }
+            mDoInBackground = doInBackground;
+        }
+
+        public void SetPreExecuteDelegator(OnPreExecuteDelegate onPreExecuteDelegate)
+        {
+            mOnPreExecute = onPreExecuteDelegate;
+        }
+
+        public void SetPreExecuteDelegator(OnProgressUpdateDelegate onProgressUpdateDelegate)
+        {
+            mOnProgressUpdate = onProgressUpdateDelegate;
+        }
+
+        public void SetPostExecuteDelegator(OnPostExecuteDelegate onPostExecuteDelegate)
+        {
+            mOnPostExecute = onPostExecuteDelegate;
+        }
+
+        public void SetCancelDelegator(OnCancelledDelegate onCancelledDelegate)
+        {
+            mOnCancelled = onCancelledDelegate;
+        }
+
+        public void SetCancelAfterFinishedDelegator(OnCancelledAfterFinishedDelegate onCancelledAfterFinishedDelegate)
+        {
+            mOnCancelledAfterFinished = onCancelledAfterFinishedDelegate;
+        }
+
+        internal override void OnCancelled()
+        {
+            if (mOnCancelled != null)
+            {
+                mOnCancelled();
+            }
+        }
+
+        internal override void OnCancelled(Result result, params Param[] parameters)
+        {
+            if (mOnCancelledAfterFinished != null)
+            {
+                mOnCancelledAfterFinished(result, parameters);
+            }
+        }
+
+        internal override void OnPreExecute()
+        {
+            if (mOnPreExecute != null)
+            {
+                mOnPreExecute();
+            }
+        }
+
+        internal override void OnProgressUpdate(params Progress[] values)
+        {
+            if (mOnProgressUpdate != null)
+            {
+                mOnProgressUpdate();
+            }
+        }
+
+        internal override Result DoInBackground(params Param[] parameters)
+        {
+            return mDoInBackground(parameters);
+        }
+
+        internal override void OnPostExecute(Result result, params Param[] parameters)
+        {
+            if (mOnPostExecute != null)
+            {
+                mOnPostExecute(result, parameters);
+            }
         }
     }
 }
