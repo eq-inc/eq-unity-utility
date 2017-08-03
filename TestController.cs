@@ -5,6 +5,7 @@ public class TestController : BaseAndroidMainController
 {
     private ITest[] mTests = new ITest[]
     {
+        new TestLocationMainController(),
         new TestGoogleMapsAPI(),
         //new TestAsyncTask(),
     };
@@ -57,6 +58,48 @@ public class TestController : BaseAndroidMainController
         bool IsTesting();
         bool Result();
     }
+
+    private class TestLocationMainController : ITest
+    {
+        public void Start()
+        {
+            LocationMainController controller = new LocationMainController();
+            Type controllerType = controller.GetType();
+
+            float[][] testDataArrays = new float[][]
+            {
+                new float[]{35.66724f, 139.7291f, 35.66804f, 139.7283f, 114.565f},
+                new float[]{36.10056f, 140.09111f, 35.65500f, 139.74472f, 58502.45893124115f},
+            };
+
+            foreach(float[] testDataArray in testDataArrays)
+            {
+                object[] parameters = new object[]
+                {
+                    testDataArray[0],
+                    testDataArray[1],
+                    testDataArray[2],
+                    testDataArray[3],
+                };
+                double ret = (double)controllerType.InvokeMember("GetDistanceM", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Instance, null, controller, parameters);
+                if(Math.Abs(ret - testDataArray[4]) > testDataArray[4] * 0.05)
+                {
+                    UnityEngine.Debug.Assert(true);
+                }
+            }
+        }
+
+        public bool IsTesting()
+        {
+            return false;
+        }
+
+        public bool Result()
+        {
+            return true;
+        }
+    }
+
 
     private class TestAsyncTask : ITest
     {
