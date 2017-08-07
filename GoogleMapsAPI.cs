@@ -16,9 +16,9 @@ namespace Eq.Unity
         internal static LogController Logger = new LogController();
         private const string UrlBaseDirections = "https://maps.googleapis.com/maps/api/directions/json?";
 
-        public static void EnableDebug(bool enable)
+        public static void CopyLogController(LogController copyFrom)
         {
-            Logger.SetOutputLogCategory(enable ? LogController.LogCategoryAll : LogController.LogCategoryNone);
+            Logger.CopyFrom(copyFrom);
         }
 
         private string mAPIKey;

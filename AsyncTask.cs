@@ -20,9 +20,9 @@ namespace Eq.Unity
 
         abstract internal Result DoInBackground(params Param[] parameters);
 
-        public void EnableDebugLog(bool enableDebugLog)
+        public void CopyLogController(LogController copyFrom)
         {
-            mLogger.SetOutputLogCategory(enableDebugLog ? (LogController.LogCategoryMethodIn | LogController.LogCategoryMethodOut | LogController.LogCategoryMethodTrace) : 0);
+            mLogger.CopyFrom(copyFrom);
         }
 
         public void Execute(params Param[] parameters)

@@ -181,6 +181,7 @@ namespace Eq.Unity
 
         virtual internal void Start()
         {
+            mLogger.SetLogTag(Application.productName);
             mLogger.CategoryLog(LogCategoryMethodIn);
             mLogger.CategoryLog(LogCategoryMethodOut);
         }

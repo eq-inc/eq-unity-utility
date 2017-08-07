@@ -68,6 +68,7 @@ public class TestController : BaseAndroidMainController
 
             float[][] testDataArrays = new float[][]
             {
+                // 開始地点緯度、開始地点経度、終了地点緯度、終了地点経度、距離(m)
                 new float[]{35.66724f, 139.7291f, 35.66804f, 139.7283f, 114.565f},
                 new float[]{36.10056f, 140.09111f, 35.65500f, 139.74472f, 58502.45893124115f},
             };
