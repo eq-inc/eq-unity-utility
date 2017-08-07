@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -180,6 +181,7 @@ namespace Eq.Unity
 
         virtual internal void Start()
         {
+            mLogger.SetLogTag(Application.productName);
             mLogger.CategoryLog(LogCategoryMethodIn);
             mLogger.CategoryLog(LogCategoryMethodOut);
         }

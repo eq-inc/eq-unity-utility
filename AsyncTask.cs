@@ -20,9 +20,9 @@ namespace Eq.Unity
 
         abstract internal Result DoInBackground(params Param[] parameters);
 
-        public void EnableDebugLog(bool enableDebugLog)
+        public void CopyLogController(LogController copyFrom)
         {
-            mLogger.SetOutputLogCategory(enableDebugLog ? (LogController.LogCategoryMethodIn | LogController.LogCategoryMethodOut | LogController.LogCategoryMethodTrace) : 0);
+            mLogger.CopyFrom(copyFrom);
         }
 
         public void Execute(params Param[] parameters)
@@ -112,7 +112,7 @@ namespace Eq.Unity
 
         }
 
-        internal void PublishProgress(params Progress[] values)
+        public void PublishProgress(params Progress[] values)
         {
             if (mProgressValueQueue == null)
             {
@@ -128,7 +128,7 @@ namespace Eq.Unity
             while (!mFinished)
             {
                 yield return OnProgressUpdateForCoroutine();
-                yield return new WaitForEndOfFrame();
+                yield return null;
             }
 
             if (mCanceled)
@@ -282,7 +282,7 @@ namespace Eq.Unity
         }
     }
 
-    public class DelegateAsncTask<Param, Progress, Result> : AsyncTask<Param, Progress, Result>
+    public class DelegateAsyncTask<Param, Progress, Result> : AsyncTask<Param, Progress, Result>
     {
         public delegate void OnPreExecuteDelegate();
         public delegate Result DoInBackgroundDelegate(params Param[] parameters);
@@ -298,7 +298,7 @@ namespace Eq.Unity
         private OnCancelledDelegate mOnCancelled;
         private OnCancelledAfterFinishedDelegate mOnCancelledAfterFinished;
 
-        public DelegateAsncTask(DoInBackgroundDelegate doInBackground)
+        public DelegateAsyncTask(DoInBackgroundDelegate doInBackground)
         {
             if (doInBackground == null)
             {
@@ -312,7 +312,7 @@ namespace Eq.Unity
             mOnPreExecute = onPreExecuteDelegate;
         }
 
-        public void SetPreExecuteDelegator(OnProgressUpdateDelegate onProgressUpdateDelegate)
+        public void SetProgressUpdateDelegator(OnProgressUpdateDelegate onProgressUpdateDelegate)
         {
             mOnProgressUpdate = onProgressUpdateDelegate;
         }
