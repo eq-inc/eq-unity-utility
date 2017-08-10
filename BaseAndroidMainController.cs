@@ -170,7 +170,7 @@ namespace Eq.Unity
             if (quitApplication)
             {
                 mLogger.CategoryLog(LogCategoryMethodTrace, "BaseAndroidMainController.PopCurrentScene: call Application.Quit()");
-                Application.Quit();
+                AndroidHelper.AndroidQuit();
             }
 
             mLogger.CategoryLog(LogCategoryMethodOut);
