@@ -1,11 +1,9 @@
 ﻿using System;
-using System.Collections;
 using System.Runtime.CompilerServices;
 using System.Text;
 using UnityEngine;
 using UnityEngine.Networking;
 
-[assembly: InternalsVisibleTo("eq-unity-utility.Tests")]
 namespace Eq.Unity
 {
     public class GoogleMapsAPI
@@ -18,9 +16,9 @@ namespace Eq.Unity
         internal static LogController Logger = new LogController();
         private const string UrlBaseDirections = "https://maps.googleapis.com/maps/api/directions/json?";
 
-        public static void EnableDebug(bool enable)
+        public static void CopyLogController(LogController copyFrom)
         {
-            Logger.SetOutputLogCategory(enable ? LogController.LogCategoryAll : LogController.LogCategoryNone);
+            Logger.CopyFrom(copyFrom);
         }
 
         private string mAPIKey;
@@ -36,20 +34,17 @@ namespace Eq.Unity
             mAPIKey = apiKey;
         }
 
-        internal void Test()
-        {
-
-        }
-
+        [System.Obsolete("use GetDirectionCoroutine")]
         public ResponseDirections GetDirectionsFromCurrentPosition(TransferMode transferMode, string address)
         {
             Logger.CategoryLog(LogController.LogCategoryMethodIn);
-            ResponseDirections ret= GetDirections(transferMode, new UrlParameterOrigin(Input.location.lastData.latitude, Input.location.lastData.longitude), new UrlParameterDestination(address));
+            ResponseDirections ret = GetDirections(transferMode, new UrlParameterOrigin(Input.location.lastData.latitude, Input.location.lastData.longitude), new UrlParameterDestination(address));
             Logger.CategoryLog(LogController.LogCategoryMethodOut);
 
             return ret;
         }
 
+        [System.Obsolete("use GetDirectionCoroutine")]
         public ResponseDirections GetDirectionsFromCurrentPosition(TransferMode transferMode, float latitude, float longitude)
         {
             Logger.CategoryLog(LogController.LogCategoryMethodIn);
@@ -59,6 +54,37 @@ namespace Eq.Unity
             return ret;
         }
 
+        public void GetDirectionCoroutine(TransferMode transferMode, UrlParameterOrigin orgParameter, UrlParameterDestination destParameter, RESTApiReceiver<ResponseDirections>.Receiver receiver)
+        {
+            Logger.CategoryLog(LogController.LogCategoryMethodIn);
+
+            StringBuilder urlBuilder = new StringBuilder(UrlBaseDirections);
+
+            // modeパラメータ
+            UrlParameterMode modeParameter = new UrlParameterMode(transferMode);
+            urlBuilder.Append(modeParameter.GetName()).Append("=").Append(modeParameter.GetValue()).Append("&");
+
+            // originパラメータ
+            urlBuilder.Append(orgParameter.GetName()).Append("=").Append(orgParameter.GetValue()).Append("&");
+
+            // destinationパラメータ
+            urlBuilder.Append(destParameter.GetName()).Append("=").Append(destParameter.GetValue()).Append("&");
+
+            // languageパラメータ
+            UrlParameterLanguage languageParameter = new UrlParameterLanguage();
+            urlBuilder.Append(languageParameter.GetName()).Append("=").Append(languageParameter.GetValue()).Append("&");
+
+            // API key
+            UrlParameterAPIKey apiKeyParameter = new UrlParameterAPIKey(mAPIKey);
+            urlBuilder.Append(apiKeyParameter.GetName()).Append("=").Append(apiKeyParameter.GetValue());
+
+            RESTApiReceiver<ResponseDirections> responseReceiver = new RESTApiReceiver<ResponseDirections>();
+            responseReceiver.Get(urlBuilder.ToString(), receiver);
+
+            Logger.CategoryLog(LogController.LogCategoryMethodOut);
+        }
+
+        [System.Obsolete("use GetDirectionCoroutine")]
         public ResponseDirections GetDirections(TransferMode transferMode, UrlParameterOrigin orgParameter, UrlParameterDestination destParameter)
         {
             Logger.CategoryLog(LogController.LogCategoryMethodIn);
@@ -68,19 +94,17 @@ namespace Eq.Unity
 
             // modeパラメータ
             UrlParameterMode modeParameter = new UrlParameterMode(transferMode);
-            urlBuilder.Append(modeParameter.GetName()).Append("=").Append(modeParameter.GetValue());
+            urlBuilder.Append(modeParameter.GetName()).Append("=").Append(modeParameter.GetValue()).Append("&");
 
             // originパラメータ
-            urlBuilder.Append(orgParameter.GetName()).Append("=").Append(orgParameter.GetValue());
+            urlBuilder.Append(orgParameter.GetName()).Append("=").Append(orgParameter.GetValue()).Append("&");
 
             // destinationパラメータ
-            urlBuilder.Append(destParameter.GetName()).Append("=").Append(destParameter.GetValue());
+            urlBuilder.Append(destParameter.GetName()).Append("=").Append(destParameter.GetValue()).Append("&");
 
             // languageパラメータ
             UrlParameterLanguage languageParameter = new UrlParameterLanguage();
-            urlBuilder.Append(languageParameter.GetName()).Append("=").Append(languageParameter.GetValue());
-
-            Logger.CategoryLog(LogController.LogCategoryMethodTrace, "url(without api key parameter) = " + urlBuilder.ToString());
+            urlBuilder.Append(languageParameter.GetName()).Append("=").Append(languageParameter.GetValue()).Append("&");
 
             // API key
             UrlParameterAPIKey apiKeyParameter = new UrlParameterAPIKey(mAPIKey);
@@ -120,7 +144,12 @@ namespace Eq.Unity
             byte[] ret = null;
 
             request.downloadHandler = new DownloadHandlerBuffer();
-            mRoutine.StartCoroutine(RunWebRequest(request));
+            request.Send();
+            while (!request.isDone)
+            {
+                System.Threading.Thread.Sleep(1);
+            }
+
             if (request.responseCode == 200)
             {
                 ret = request.downloadHandler.data;
@@ -128,18 +157,6 @@ namespace Eq.Unity
 
             Logger.CategoryLog(LogController.LogCategoryMethodOut);
             return ret;
-        }
-
-        internal IEnumerator RunWebRequest(UnityWebRequest request)
-        {
-            Logger.CategoryLog(LogController.LogCategoryMethodIn);
-            yield return request.Send();
-
-            while (!request.isDone)
-            {
-                yield return null;
-            }
-            Logger.CategoryLog(LogController.LogCategoryMethodOut);
         }
 
         abstract public class UrlParameter
@@ -371,13 +388,40 @@ namespace Eq.Unity
         }
     }
 
-    public class ResponseDirections
+    public enum DirectionStatus
     {
-        public string status;
-        public GeocodedWaypoint[] geocoded_waypoints;
-        public Route[] routes;
+        INIT, OK, NOT_FOUND, ZERO_RESULTS, MAX_WAYPOINTS_EXCEEDED, INVALID_REQUEST, OVER_QUERY_LIMIT, REQUEST_DENIED, UNKNOWN_ERROR
     }
 
+    [Serializable]
+    public class ResponseDirections
+    {
+        public GeocodedWaypoint[] geocoded_waypoints;
+        public Route[] routes;
+        public string status;
+        private DirectionStatus mStatusEnum = DirectionStatus.INIT;
+
+        public DirectionStatus GetStatus()
+        {
+            DirectionStatus ret = mStatusEnum;
+
+            if (ret == DirectionStatus.INIT)
+            {
+                try
+                {
+                    ret = mStatusEnum = (DirectionStatus)Enum.Parse(ret.GetType(), status);
+                }
+                catch (Exception e)
+                {
+                    GoogleMapsAPI.Logger.CategoryLog(LogController.LogCategoryMethodError, e);
+                }
+            }
+
+            return ret;
+        }
+    }
+
+    [Serializable]
     public class GeocodedWaypoint
     {
         public string geocoder_status;
@@ -385,6 +429,7 @@ namespace Eq.Unity
         public string[] types;
     }
 
+    [Serializable]
     public class Route
     {
         public string summary;
@@ -395,6 +440,7 @@ namespace Eq.Unity
         public Bounds bounds;
     }
 
+    [Serializable]
     public class Leg
     {
         public Step[] steps;
@@ -406,6 +452,7 @@ namespace Eq.Unity
         public string end_address;
     }
 
+    [Serializable]
     public class Step
     {
         public string travel_mode;
@@ -417,23 +464,27 @@ namespace Eq.Unity
         public IntValue distance;
     }
 
+    [Serializable]
     public class LatLng
     {
         public float lat;
         public float lng;
     }
 
+    [Serializable]
     public class IntValue
     {
         public int value;
         public string text;
     }
 
+    [Serializable]
     public class Points
     {
         public string points;
     }
 
+    [Serializable]
     public class Bounds
     {
         public LatLng southwest;

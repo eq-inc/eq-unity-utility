@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -169,7 +170,7 @@ namespace Eq.Unity
             if (quitApplication)
             {
                 mLogger.CategoryLog(LogCategoryMethodTrace, "BaseAndroidMainController.PopCurrentScene: call Application.Quit()");
-                Application.Quit();
+                AndroidHelper.AndroidQuit();
             }
 
             mLogger.CategoryLog(LogCategoryMethodOut);
@@ -180,6 +181,7 @@ namespace Eq.Unity
 
         virtual internal void Start()
         {
+            mLogger.SetLogTag(Application.productName);
             mLogger.CategoryLog(LogCategoryMethodIn);
             mLogger.CategoryLog(LogCategoryMethodOut);
         }

@@ -12,15 +12,38 @@ namespace Eq.Unity
         public const System.Int64 LogCategoryAll = 0x7FFFFFFFFFFFFFFF;
         public const System.Int64 LogCategoryNone = 0;
         public System.Int64 mOutputLogCategories = LogCategoryNone;
+        private string mLogTag = "";
 
         public LogController()
         {
             // 処理なし
         }
 
+        public LogController(LogController srcLogController)
+        {
+            mOutputLogCategories = srcLogController.mOutputLogCategories;
+            mLogTag = srcLogController.mLogTag;
+        }
+
         public LogController(System.Int64 outputLogCategories)
         {
             mOutputLogCategories = outputLogCategories;
+        }
+
+        public void SetLogTag(string logTag)
+        {
+            mLogTag = logTag;
+        }
+
+        public void CopyFrom(LogController copyFrom)
+        {
+            mOutputLogCategories = copyFrom.mOutputLogCategories;
+            mLogTag = copyFrom.mLogTag;
+        }
+
+        public void CopyTo(LogController copyTo)
+        {
+            copyTo.CopyFrom(this);
         }
 
         public void AppendOutputLogCategory(System.Int64 outputLogCategories)
@@ -50,6 +73,11 @@ namespace Eq.Unity
                 StringBuilder contentBuilder = new StringBuilder();
                 StackFrame lastStackFrame = new StackTrace(true).GetFrame(1);
 
+                if (!string.IsNullOrEmpty(mLogTag))
+                {
+                    contentBuilder.Append(mLogTag).Append(": ");
+                }
+
                 contentBuilder
                     .Append(lastStackFrame.GetMethod())
                     .Append("(")
@@ -77,7 +105,12 @@ namespace Eq.Unity
                         {
                             StringBuilder contentBuilder = new StringBuilder();
                             StackFrame lastStackFrame = new StackTrace(true).GetFrame(1);
-                            contentBuilder.Append(lastStackFrame.GetMethod());
+                            if (!string.IsNullOrEmpty(mLogTag))
+                            {
+                                contentBuilder.Append(mLogTag).Append(": ");
+                            }
+                            contentBuilder
+                                .Append(lastStackFrame.GetMethod());
                             if (!string.IsNullOrEmpty(lastStackFrame.GetFileName()))
                             {
                                 contentBuilder.Append("(")
@@ -104,6 +137,10 @@ namespace Eq.Unity
                             StringBuilder contentBuilder = new StringBuilder();
                             StackFrame lastStackFrame = new StackTrace(true).GetFrame(1);
 
+                            if (!string.IsNullOrEmpty(mLogTag))
+                            {
+                                contentBuilder.Append(mLogTag).Append(": ");
+                            }
                             contentBuilder
                                 .Append(lastStackFrame.GetMethod());
                             if (!string.IsNullOrEmpty(lastStackFrame.GetFileName()))
@@ -132,6 +169,10 @@ namespace Eq.Unity
                         if (contents != null && contents.Length > 0)
                         {
                             StringBuilder contentBuilder = new StringBuilder();
+                            if (!string.IsNullOrEmpty(mLogTag))
+                            {
+                                contentBuilder.Append(mLogTag).Append(": ");
+                            }
                             foreach (string content in contents)
                             {
                                 contentBuilder.Append(content);
