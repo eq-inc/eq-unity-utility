@@ -170,7 +170,16 @@ namespace Eq.Unity
             if (quitApplication)
             {
                 mLogger.CategoryLog(LogCategoryMethodTrace, "BaseAndroidMainController.PopCurrentScene: call Application.Quit()");
-                AndroidHelper.AndroidQuit();
+
+                System.Type androidHelperType = System.Type.GetType("AndroidHelper, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+                if(androidHelperType != null)
+                {
+                    androidHelperType.InvokeMember("AndroidQuit", System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static, null, null, null);
+                }
+                else
+                {
+                    Application.Quit();
+                }
             }
 
             mLogger.CategoryLog(LogCategoryMethodOut);
