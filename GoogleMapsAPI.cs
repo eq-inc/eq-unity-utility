@@ -22,7 +22,6 @@ namespace Eq.Unity
         }
 
         private string mAPIKey;
-        private CommonRoutine mRoutine = new CommonRoutine();
 
         public GoogleMapsAPI(string apiKey)
         {
