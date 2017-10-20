@@ -19,6 +19,7 @@ namespace Eq.Unity
         internal virtual void OnEnable()
         {
             mLogger.SetOutputLogCategory(mOutputLogCategories);
+            mLogger.SetLogTag(Application.productName);
         }
 
         internal bool SetTextInUIComponent(Component topComponent, string targetComponentName, string content)
