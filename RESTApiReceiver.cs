@@ -11,6 +11,8 @@ namespace Eq.Unity
 {
     public class RESTApiReceiver<V>
     {
+        public static readonly string HeaderContentType = "Content-Type";
+
         public delegate void Receiver(V response);
         private CommonRoutine mRoutine = new CommonRoutine();
 
@@ -19,6 +21,18 @@ namespace Eq.Unity
             CommunicationInfo<V> info = new CommunicationInfo<V>();
             info.url = url;
             info.delegator = delegator;
+            mRoutine.StartCoroutine(CommunicateRoutine(info));
+        }
+
+        public void Post(string url, Stream entityStream, string entityMimeType, Receiver delegator)
+        {
+            CommunicationInfo<V> info = new CommunicationInfo<V>();
+            info.requestHeaders = new Dictionary<string, string>();
+
+            info.url = url;
+            info.entityStream = entityStream;
+            info.delegator = delegator;
+            info.requestHeaders[HeaderContentType] = entityMimeType;
             mRoutine.StartCoroutine(CommunicateRoutine(info));
         }
 
@@ -38,6 +52,8 @@ namespace Eq.Unity
 
             if(info.entityStream != null)
             {
+                request.method = UnityWebRequest.kHttpVerbPOST;
+
                 using (MemoryStream bufferStream = new MemoryStream())
                 {
                     int readSize = 0;
@@ -65,7 +81,7 @@ namespace Eq.Unity
 
             if (info.delegator != null)
             {
-                string contentTypeHD = request.GetResponseHeader("Content-type");
+                string contentTypeHD = request.GetResponseHeader(HeaderContentType);
                 string[] headerParams = contentTypeHD.Split(new char[] { ';' });
                 Encoding useEncoding = Encoding.UTF8;
 
