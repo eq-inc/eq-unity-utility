@@ -81,28 +81,35 @@ namespace Eq.Unity
 
             if (info.delegator != null)
             {
-                string contentTypeHD = request.GetResponseHeader(HeaderContentType);
-                string[] headerParams = contentTypeHD.Split(new char[] { ';' });
-                Encoding useEncoding = Encoding.UTF8;
-
-                if (headerParams.Length > 0)
+                if (!request.isError)
                 {
-                    foreach (string headerParam in headerParams)
+                    string contentTypeHD = request.GetResponseHeader(HeaderContentType);
+                    string[] headerParams = contentTypeHD.Split(new char[] { ';' });
+                    Encoding useEncoding = Encoding.UTF8;
+
+                    if (headerParams.Length > 0)
                     {
-                        if (headerParam.Trim().StartsWith("charset="))
+                        foreach (string headerParam in headerParams)
                         {
-                            string[] paramKeyValue = headerParam.Split(new char[] { '=' });
-                            if (paramKeyValue.Length > 1)
+                            if (headerParam.Trim().StartsWith("charset="))
                             {
-                                useEncoding = Encoding.GetEncoding(paramKeyValue[1]);
+                                string[] paramKeyValue = headerParam.Split(new char[] { '=' });
+                                if (paramKeyValue.Length > 1)
+                                {
+                                    useEncoding = Encoding.GetEncoding(paramKeyValue[1]);
+                                }
+                                break;
                             }
-                            break;
                         }
                     }
-                }
 
-                V ret = JsonUtility.FromJson<V>(useEncoding.GetString(request.downloadHandler.data));
-                info.delegator(ret);
+                    V ret = JsonUtility.FromJson<V>(useEncoding.GetString(request.downloadHandler.data));
+                    info.delegator(ret);
+                }
+                else
+                {
+                    info.delegator(default(V));
+                }
             }
         }
     }
