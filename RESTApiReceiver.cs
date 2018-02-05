@@ -81,7 +81,7 @@ namespace Eq.Unity
 
             if (info.delegator != null)
             {
-                if (!request.isError)
+                if (!request.isNetworkError)
                 {
                     string contentTypeHD = request.GetResponseHeader(HeaderContentType);
                     string[] headerParams = contentTypeHD.Split(new char[] { ';' });
