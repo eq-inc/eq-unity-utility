@@ -8,20 +8,20 @@ namespace Eq.Unity
 
         public static double UnixTime()
         {
-            return (DateTime.Now - UnixTimeBase).TotalSeconds;
+            return (DateTimeOffset.UtcNow - UnixTimeBase).TotalSeconds;
         }
 
-        public static double UnixTime(DateTime targetDateTime)
+        public static double UnixTime(DateTimeOffset targetDateTime)
         {
             return (targetDateTime - UnixTimeBase).TotalSeconds;
         }
 
         public static long UnixTimeMilliseconds()
         {
-            return (long)((DateTime.Now - UnixTimeBase).TotalMilliseconds);
+            return (long)((DateTimeOffset.UtcNow - UnixTimeBase).TotalMilliseconds);
         }
 
-        public static long UnixTimeMilliseconds(DateTime targetDateTime)
+        public static long UnixTimeMilliseconds(DateTimeOffset targetDateTime)
         {
             return (long)((targetDateTime - UnixTimeBase).TotalMilliseconds);
         }
