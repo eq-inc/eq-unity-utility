@@ -1,7 +1,20 @@
-﻿using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+#if UNITY_EDITOR
+// NOTE:
+// - InstantPreviewInput does not support `deltaPosition`.
+// - InstantPreviewInput does not support input from
+//   multiple simultaneous screen touches.
+// - InstantPreviewInput might miss frames. A steady stream
+//   of touch events across frames while holding your finger
+//   on the screen is not guaranteed.
+// - InstantPreviewInput does not generate Unity UI event system
+//   events from device touches. Use mouse/keyboard in the editor
+//   instead.
+using Input = GoogleARCore.InstantPreviewInput;
+#endif
 
 namespace Eq.Unity
 {
@@ -20,6 +33,7 @@ namespace Eq.Unity
                 return mValue;
             }
         }
+        private static readonly Touch DummyTouch = new Touch();
         public static ScreenTimeout NeverSleep = new ScreenTimeout(SleepTimeout.NeverSleep);
         public static ScreenTimeout SystemSetting = new ScreenTimeout(SleepTimeout.SystemSetting);
         internal static Stack<string> SceneStack = new Stack<string>();
@@ -199,6 +213,7 @@ namespace Eq.Unity
         {
             if (Application.platform == RuntimePlatform.Android)
             {
+#if !UNITY_EDITOR
                 // エスケープキー取得
                 if (Input.GetKeyDown(KeyCode.Escape))
                 {
@@ -209,6 +224,7 @@ namespace Eq.Unity
                         return;
                     }
                 }
+#endif
             }
         }
 
@@ -249,6 +265,39 @@ namespace Eq.Unity
             {
                 PopCurrentScene();
                 ret = true;
+            }
+
+            return ret;
+        }
+
+        internal bool LastTouch(out Touch lastTouch)
+        {
+            bool ret = false;
+            int touchCount = 0;
+            Type inputType = null;
+
+#if UNITY_EDITOR
+            // ARCoreの場合、「GoogleARCore.InstantPreviewInput」を使用したいが直接宣言するとGoogleTango・GoogleVRの場合にエラーになるので、リフレクトで確認
+            inputType = Type.GetType("GoogleARCore.InstantPreviewInput, Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null");
+            if(inputType == null)
+            {
+                // 「GoogleARCore.InstantPreviewInput」が存在しないので、通常のInputを使用する
+                inputType = typeof(UnityEngine.Input);
+            }
+#else
+            // 実機の場合は常にUnityEngine.Inputを使用する
+            inputType = typeof(UnityEngine.Input);
+#endif
+
+            touchCount = (int)inputType.GetProperty("touchCount", System.Reflection.BindingFlags.GetProperty | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static).GetGetMethod().Invoke(null, null);
+            if (touchCount > 0)
+            {
+                ret = true;
+                lastTouch = (UnityEngine.Touch)inputType.GetMethod("GetTouch", System.Reflection.BindingFlags.InvokeMethod | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Static).Invoke(null, new object[] { 0});
+            }
+            else
+            {
+                lastTouch = DummyTouch;
             }
 
             return ret;
